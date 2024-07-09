@@ -7,4 +7,6 @@ For boards/units ordered through Forbes Automotive, the firmware can be updated 
 
 For users wishing to customise or edit the code, it is released here for free use.  
 
+The Gerber files for the PCB, should anyone wish to build their own, is under the "PCB" folder.  This is the latest board.
+
 Forbes Automotive, 2024
