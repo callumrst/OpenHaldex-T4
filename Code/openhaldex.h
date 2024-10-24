@@ -16,8 +16,9 @@
 #define canTestData 0  // if 1, will send a 'fake' CAN message to both Chassis & Haldex
 
 // Baud Rates
-#define baudBT 9600     // Bluetooth Baud Rate (default is 9600).  AT Setup is 38400
-#define btTimeout 8000  // Bluetooth timeout
+#define baudSerial 115200  // Serial communication baud rate
+#define baudBT 9600        // Bluetooth Baud Rate (default is 9600).  AT Setup is 38400
+#define btTimeout 8000     // Bluetooth timeout
 
 // Pin Assignments
 #define pinBT_Conf 4      // button for BT config

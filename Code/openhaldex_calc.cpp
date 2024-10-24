@@ -89,7 +89,7 @@ void getLockData(CAN_message_t *frame) {
       frame->buf[3] = get_lockTarget_adjusted_value(0x4E);
       frame->buf[4] = get_lockTarget_adjusted_value(0xFE);
       frame->buf[5] = get_lockTarget_adjusted_value(0xFE);
-      frame->buf[6] = get_lockTarget_adjusted_value(0x20); // was 20;
+      frame->buf[6] = get_lockTarget_adjusted_value(0x20);  // was 20;
       frame->buf[7] = get_lockTarget_adjusted_value(0xFE);
       break;
     case MOTOR3_ID:
@@ -107,17 +107,17 @@ void getLockData(CAN_message_t *frame) {
       frame->buf[2] = 0x0;
       frame->buf[3] = 0xA;
       break;
-      
+
     case BRAKES3_ID:
-      adjusted_slip = get_lockTarget_adjusted_value(0xA);
-      frame->buf[0] = 0x00;
+      adjusted_slip = get_lockTarget_adjusted_value(0xFF);
+      frame->buf[0] = adjusted_slip;
       frame->buf[1] = 0xA;
-      frame->buf[2] = 0x00;
+      frame->buf[2] = adjusted_slip;
       frame->buf[3] = 0xA;
-      frame->buf[4] = 0x00;
-      frame->buf[5] = 0xA - adjusted_slip;
-      frame->buf[6] = 0x00;
-      frame->buf[7] = 0xA - adjusted_slip;
+      frame->buf[4] = 0x0;
+      frame->buf[5] = 0xA;
+      frame->buf[6] = 0x0;
+      frame->buf[7] = 0xA;
 
       //frame->data->high = (0xa << 24) + (0xa << 8);
       //frame->data->low = frame->data->high + (adjusted_slip << 16) + adjusted_slip;

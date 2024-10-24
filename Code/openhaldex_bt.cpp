@@ -2,30 +2,25 @@
 
 bool btSendStatus(void *params) {
   bt_packet packet;
-  if (!isScreen) {
-
+  if (!isScreen) {  // if not screen, must be the app...
     packet.data[0] = APP_MSG_STATUS;
-    packet.data[1] = 0;  // was haldexStatus
+    packet.data[1] = 0;                 // was haldexStatus
     packet.data[2] = haldexEngagement;  //haldexEngagement;
-    packet.data[3] = lockTarget;  //lockTarget;
-    packet.data[4] = vehicleSpeed;  //vehicleSpeed;
+    packet.data[3] = lockTarget;        //lockTarget;
+    packet.data[4] = vehicleSpeed;      //vehicleSpeed;
     //packet.data[5] = state.mode_override; // app software has a limit on len[6], so this stops the app working...
-    packet.data[5] = SERIAL_PACKET_END;
+    packet.data[5] = serialPacketEnd;
     packet.len = 6;
 
     for (int i = 0; i < packet.len - 1; i++) {
-      if (packet.data[i] == SERIAL_PACKET_END) {
-        packet.data[i] = SERIAL_PACKET_END - 1;
+      if (packet.data[i] == serialPacketEnd) {
+        packet.data[i] = serialPacketEnd - 1;
       }
     }
-
-    /*for (int i = 0; i < packet.len; i++) {
-      Serial.println(packet.data[i]);
-    }*/
     Serial2.write(packet.data, packet.len);
   }
 
-  if (isScreen) {
+  if (isScreen) { // must be the screen...
     packet.data[0] = APP_MSG_STATUS;
     packet.data[1] = 0;  // was haldexStatus
     packet.data[2] = haldexEngagement;
@@ -35,7 +30,7 @@ bool btSendStatus(void *params) {
     packet.data[6] = state.mode;
     packet.data[7] = int(pedValue);
     packet.data[8] = softwareVersion;
-    packet.data[9] = SERIAL_PACKET_END;
+    packet.data[9] = serialPacketEnd;
     packet.len = 10;
 
     Serial2.write(packet.data, packet.len);
@@ -105,7 +100,7 @@ void btProcess(bt_packet *rx_packet) {
           tx_packet.data[1] = DATA_CTRL_CHECK_LOCKPOINTS;
           tx_packet.data[2] = state.custom_mode.lockpoint_rx_l;
           tx_packet.data[3] = state.custom_mode.lockpoint_rx_h;
-          tx_packet.data[4] = SERIAL_PACKET_END;
+          tx_packet.data[4] = serialPacketEnd;
           tx_packet.len = 5;
 
           Serial2.write(tx_packet.data, tx_packet.len);
@@ -121,7 +116,7 @@ void btProcess(bt_packet *rx_packet) {
           tx_packet.data[1] = DATA_CTRL_CHECK_MODE;
           tx_packet.data[2] = state.mode;
           tx_packet.data[3] = state.ped_threshold;
-          tx_packet.data[4] = SERIAL_PACKET_END;
+          tx_packet.data[4] = serialPacketEnd;
           tx_packet.len = 5;
 
           Serial2.write(tx_packet.data, tx_packet.len);
@@ -157,14 +152,12 @@ void btInit() {
   pinMode(pinBT_Reset, OUTPUT);
   digitalWrite(pinBT_Reset, LOW);
   digitalWrite(pinBT_Conf, HIGH);
-  //delay(2500);
   blinkLED(625, 4, 10, 0, 0);  // 2500ms total 'high' time for reset, blink LED takes 625ms to complete (625x4=2500ms)
-  //digitalWrite(pinBT_Reset, LOW);
   pinMode(pinBT_Reset, INPUT);
   delay(2500);
 
   Serial2.end();         // end current (if any) Serial2/Bluetooth connections
-  Serial2.begin(38400);  // AT mode requires Baud 38400
+  Serial2.begin(38400);  // now in AT mode which requires baudrate 38400
 
   Serial2.write("AT\r\n");  // confirm in AT mode
 #if stateDebug
@@ -175,7 +168,7 @@ void btInit() {
 #endif /* stateDebug */
   blinkLED(312, 1, 10, 0, 0);
 
-  Serial2.write("AT+UART=9600,0,0\r\n");  // set baud at 38400
+  Serial2.write("AT+UART=9600,0,0\r\n");  // set baud at 9600
 #if stateDebug
   Serial.println(F("AT+UART=9600,0,0"));
   while (!Serial2.available()) {}
