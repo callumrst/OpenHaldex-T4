@@ -1,9 +1,19 @@
 #include "openhaldex.h"
 
+// AT commands to send while in AT Mode / HC05 setup
+String atCommands[8] = { "AT",
+                         "AT+UART=9600,0,0",
+                         "AT+NAME=OpenHaldexT4",
+                         "AT+ROLE=0",
+                         "AT+CMODE=0",
+                         "AT+CLASS=0",
+                         "AT+RMAAD",
+                         "AT+RESET" };
+
 bool btSendStatus(void *params) {
   bt_packet packet;
   if (!isScreen) {  // if not screen, must be the app...
-    packet.data[0] = APP_MSG_STATUS;
+    packet.data[0] = APP_MSG_STATUS;    // '1'
     packet.data[1] = 0;                 // was haldexStatus
     packet.data[2] = haldexEngagement;  //haldexEngagement;
     packet.data[3] = lockTarget;        //lockTarget;
@@ -14,13 +24,13 @@ bool btSendStatus(void *params) {
 
     for (int i = 0; i < packet.len - 1; i++) {
       if (packet.data[i] == serialPacketEnd) {
-        packet.data[i] = serialPacketEnd - 1;
+        packet.data[i] = serialPacketEnd - 1; // not really sure on the purpose of this?  0xFF-1?
       }
     }
     Serial2.write(packet.data, packet.len);
   }
 
-  if (isScreen) { // must be the screen...
+  if (isScreen) {  // must be the screen...
     packet.data[0] = APP_MSG_STATUS;
     packet.data[1] = 0;  // was haldexStatus
     packet.data[2] = haldexEngagement;
@@ -64,7 +74,6 @@ void btProcess(bt_packet *rx_packet) {
 #if stateDebug
       Serial.printf("APP_MSG_MODE: mode=%d ped_threshold=%d%%\n", rx_packet->data[1], rx_packet->data[2]);
 #endif
-
       break;
 
     case APP_MSG_CUSTOM_DATA:
@@ -135,9 +144,7 @@ void btProcess(bt_packet *rx_packet) {
 }
 
 void btInit() {
-#if stateDebug
   uint8_t at_buf[128] = { 0 };  // allocate buffer for Bluetooth module Serial messages
-#endif                          /* stateDebug */
 
   // drive all LEDs low to save power!
   digitalWrite(pinLED_R, LOW);
@@ -146,7 +153,7 @@ void btInit() {
 
 #if stateDebug
   Serial.println(F("Entering Bluetooth setup mode..."));  // start Bluetooth setup mode after init reset/conf 'buttons'
-#endif                                                    /* stateDebug */
+#endif 
 
   pinMode(pinBT_Conf, OUTPUT);
   pinMode(pinBT_Reset, OUTPUT);
@@ -159,55 +166,31 @@ void btInit() {
   Serial2.end();         // end current (if any) Serial2/Bluetooth connections
   Serial2.begin(38400);  // now in AT mode which requires baudrate 38400
 
-  Serial2.write("AT\r\n");  // confirm in AT mode
+  // write each of the AT commands (above)
+  for (int i = 0; i < 8; i++) {
+    at_buf[0] = '\0';
+
 #if stateDebug
-  Serial.println(F("AT"));
-  while (!Serial2.available()) {}
-  Serial2.readBytesUntil('\r', at_buf, ARRAY_SIZE(at_buf));
-  Serial.printf("%s\r\n", at_buf);
-#endif /* stateDebug */
-  blinkLED(312, 1, 10, 0, 0);
+    Serial.println(atCommands[i]);
+#endif
+    Serial2.println(atCommands[i]);
+    blinkLED(312, 1, 10, 0, 0); // show 'progress' with flashing LED, otherwise it looks like the module is doing nothing...
+  }
 
-  Serial2.write("AT+UART=9600,0,0\r\n");  // set baud at 9600
+  while (!Serial2.available()) {}
+  Serial2.readBytesUntil('\n', at_buf, arraySize(at_buf));
+
+  pinMode(pinBT_Reset, INPUT);
+  pinMode(pinBT_Conf, OUTPUT);
+  digitalWrite(pinBT_Conf, LOW);
+  delay(btTimeout);
+
 #if stateDebug
-  Serial.println(F("AT+UART=9600,0,0"));
-  while (!Serial2.available()) {}
-  Serial2.readBytesUntil('\n', at_buf, ARRAY_SIZE(at_buf));
-  Serial.printf("%s\r\n", at_buf);
-#endif /* stateDebug */
-  blinkLED(312, 1, 10, 0, 0);
+  Serial.println(F("Ending pairing..."));
+#endif
 
-  Serial2.write("AT+NAME=OpenHaldexT4\r\n");  // set Bluetooth name
-#if stateDebug
-  Serial.println(F("AT+NAME=OpenHaldexT4"));
-  while (!Serial2.available()) {}
-  Serial2.readBytesUntil('\n', at_buf, ARRAY_SIZE(at_buf));
-  Serial.printf("%s\r\n", at_buf);
-#endif /* stateDebug */
-  blinkLED(312, 1, 10, 0, 0);
-
-  Serial2.write("AT+ROLE=0\r\n");  // query current role
-#if stateDebug
-  Serial.println(F("AT+ROLE=0"));
-  while (!Serial2.available()) {}
-  Serial2.readBytesUntil('\n', at_buf, ARRAY_SIZE(at_buf));
-  Serial.printf("%s\r\n", at_buf);
-#endif /* stateDebug */
-  blinkLED(312, 1, 10, 0, 0);
-
-  Serial2.write("AT+RESET\r\n");  // reset Bluetooth module/connections
-#if stateDebug
-  Serial.println(F("AT+RESET"));
-  while (!Serial2.available()) {}
-  Serial2.readBytesUntil('\n', at_buf, ARRAY_SIZE(at_buf));
-  Serial.printf("%s\r\n", at_buf);
-#endif /* stateDebug */
-  blinkLED(312, 1, 10, 0, 0);
-
-  Serial2.end();          // end AT mode
-  Serial2.begin(baudBT);  // begin normal mode with the above baud
-
-  pinMode(pinBT_Conf, INPUT);
+  Serial2.end();
+  Serial2.begin(baudBT);
 
 #if stateDebug
   Serial.println(F("Bluetooth initialised!"));

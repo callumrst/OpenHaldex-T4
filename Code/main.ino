@@ -16,18 +16,16 @@ byte ped_threshold;
 byte dummyVehicleSpeed;
 
 int buttonToggle;
-int softwareVersion = 102;  // softwareVersion 1.02
+int softwareVersion = 105;  // softwareVersion 1.02
 bool isCustom;
 int lastMode;
 bool isScreen = false;
 bool isStandalone;
-
 int i = 0;
-
 uint32_t lastTransmission = 0;
 bool btConnected = false;
 
-auto timer = timer_create_default();
+auto timer = timer_create_default();  // for repeatable tasks
 
 bool printMode(void *params) {
   Serial.printf("OpenHaldex mode=%d\n", state.mode);
@@ -53,7 +51,7 @@ void setup() {
   canInit();    // begin CAN
   readEEP();    // read EEPROM for saved preferences
 
-  timer.every(1000, btSendStatus);  // send Bluetooth Status back to App/Screen if connected every 1000ms
+  timer.every(2500, btSendStatus);  // send Bluetooth Status back to App/Screen if connected every 1000ms
   timer.every(2500, writeEEP);      // write EEP (using 'update' to minimise writes) every 2500ms
 
 #if stateDebug
@@ -65,7 +63,11 @@ void setup() {
   timer.every(1000, printMB_Status);
 #endif
 
-  timer.every(20, sendStandaloneCAN);  // send standalone CAN messages every 20ms
+#if broadcastOpenHaldex
+  timer.every(50, castOpenHaldex);  // for printing CAN messages to FIS/CAN
+#endif
+
+  timer.every(20, sendStandaloneCAN);  // send standalone CAN messages every 20ms.  Don't capture in an 'if' as it may change during execution...
 }
 
 void loop() {
@@ -81,7 +83,7 @@ void loop() {
   // check to see if any Bluetooth Serial data, process if required
   while (Serial2.available()) {
     bt_packet rx_packet = { 0 };
-    rx_packet.len = Serial2.readBytesUntil(serialPacketEnd, rx_packet.data, ARRAY_SIZE(rx_packet.data));
+    rx_packet.len = Serial2.readBytesUntil(serialPacketEnd, rx_packet.data, arraySize(rx_packet.data));
     btProcess(&rx_packet);
   }
 
@@ -109,6 +111,21 @@ void setupPins() {
 
   // Setup the switches (Switch Mode & Bluetooth) for interrupt / inputs (keeps response quick)
   // can't have BT_Conf as an interrupt and change the pin state...
-  attachInterrupt(pinSwitchMode, checkSwitchMode, HIGH);
   pinMode(pinBT_Conf, INPUT);
+
+  // if BT Conf is high on boot, flash 'Haldex Gen' as a number (1 flash = Gen1, 2 flashes = Gen2...)
+  if (digitalRead(pinBT_Conf)) {
+    blinkLED(2000, haldexGen, 255, 0, 0);
+
+    // since BT_Conf is tied to the HC05 it goes into AT mode during power up, so reset it back at normal AT mode...
+    pinMode(pinBT_Conf, OUTPUT);
+    pinMode(pinBT_Reset, OUTPUT);
+    digitalWrite(pinBT_Reset, LOW);
+    digitalWrite(pinBT_Conf, LOW);
+    delay(2500);
+    pinMode(pinBT_Reset, INPUT);
+    pinMode(pinBT_Conf, INPUT);
+  }
+
+  attachInterrupt(pinSwitchMode, checkSwitchMode, HIGH);
 }

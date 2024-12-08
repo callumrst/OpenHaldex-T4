@@ -1,4 +1,4 @@
-#define haldexGen 1  // Generation for Haldex (1, 4) - used in addresses
+#define haldexGen 4  // Generation for Haldex (1, 4) - used in addresses
 
 // ***** Generation 1 Haldex Addresses *****
 #if (haldexGen == 1)
@@ -12,7 +12,7 @@
 #define MOTOR_FLEX_ID 0x580
 
 #define BRAKES1_ID 0x1A0
-#define BRAKES2_ID 0x2A0  
+#define BRAKES2_ID 0x2A0
 #define BRAKES3_ID 0x4A0
 #define BRAKES5_ID 0x5A0
 
@@ -22,6 +22,26 @@
 
 // ***** Generation 2 Haldex Addresses *****
 #if (haldexGen == 2)
+#define MOTOR1_ID 0x280      // MED9.1
+#define MOTOR2_ID 0x288      // MED9.1
+#define MOTOR3_ID 0x380      // MED9.1
+#define MOTOR5_ID 0x480      // MED9.1
+#define MOTOR6_ID 0x488      // MED9.1
+#define MOTOR7_ID 0x588      // MED9.1
+#define MOTORBREMS_ID 0x284  // MED9.1 6 byte, brake booster etc
+#define MOTOR_FLEX_ID 0x580  // MED9.1
+
+#define BRAKES1_ID 0x1A0  // MED9.1
+#define BRAKES2_ID 0x5A0
+#define BRAKES3_ID 0x4A0
+#define BRAKES5_ID 0x5A0
+
+#define GRA_ID 0x38A  // MED9.1
+#define HALDEX_ID 0x2C0
+#endif
+
+// ***** Generation 4 Haldex Addresses *****
+#if (haldexGen == 4)
 #define MOTOR1_ID 0x280
 #define MOTOR2_ID 0x288
 #define MOTOR3_ID 0x380
@@ -40,25 +60,8 @@
 #define HALDEX_ID 0x2C0
 #endif
 
-// ***** Generation 4 Haldex Addresses *****
-#if (haldexGen == 4)
-#define MOTOR1_ID 0x280
-#define MOTOR2_ID 0x288
-#define MOTOR3_ID 0x380
-#define MOTOR5_ID 0x480
-#define MOTOR6_ID 0x488
-#define MOTOR7_ID 0x588
-#define MOTORBREMS_ID 0x284
-#define MOTOR_FLEX_ID 0x580
-
-#define BRAKES1_ID 0x1A0
-#define BRAKES2_ID 0x5A0  
-#define BRAKES3_ID 0x4A0
-#define BRAKES5_ID 0x5A0
-
-#define GRA_ID 0x38A
-#define HALDEX_ID 0x2C0
-#endif
+#define fisCuntrol_ID 0x7B0
+#define openHaldex_ID 0x7C0
 
 #define NUM_LOCK_POINTS 10
 
@@ -75,7 +78,7 @@
 
 #define serialPacketEnd 0xff
 
-#define ARRAY_SIZE(array) (sizeof((array)) / sizeof((array)[0]))
+#define arraySize(array) (sizeof((array)) / sizeof((array)[0]))
 
 typedef struct can_s {
   byte status;

@@ -27,16 +27,15 @@ void checkSwitchMode() {
   if (btConnected) {
     blinkLED(100, 11, 5, 5, 5);
   } else {
-    buttonToggle++;
-    Serial.println(buttonToggle);
-    if (buttonToggle > 3) {  // if button bashed, possible for buttonToggle to go over 3; just reset (error catching)
-      buttonToggle = 0;
+    lastMode++;
+    if (lastMode > 3) {  // if button bashed, possible for buttonToggle to go over 3; just reset (error catching)
+      lastMode = 0;
     }
 
-    switch (buttonToggle) {
+    switch (lastMode) {
       case 0:
         if (isStandalone) {  // jump over 'stock' since it's Standalone and can't see Body CAN
-          buttonToggle++;
+          lastMode++;
           break;
         }
         state.mode_override = false;  // was disabled & false?
@@ -57,17 +56,17 @@ void checkSwitchMode() {
         if (isStandalone) {
           state.mode_override = false;
           state.mode = MODE_FWD;
-          buttonToggle = 1;
+          lastMode = 1;
           break;
         }
 
         if (isCustom) {
           state.mode_override = false;
           state.mode = MODE_CUSTOM;
-          buttonToggle = -1;
+          lastMode = 3;
           break;
         } else {
-          buttonToggle = 0;
+          lastMode = 0;
           state.mode_override = false;
           state.mode = MODE_STOCK;
           break;
