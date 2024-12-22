@@ -1,4 +1,4 @@
-#define haldexGen 4  // Generation for Haldex (1, 4) - used in addresses
+#define haldexGen 1  // Generation for Haldex (1, 4) - used in addresses
 
 // ***** Generation 1 Haldex Addresses *****
 #if (haldexGen == 1)

@@ -99,23 +99,18 @@ void getLockData(CAN_message_t *frame) {
         frame->buf[2] = get_lockTarget_adjusted_value(0xFA);
         frame->buf[7] = get_lockTarget_adjusted_value(0xFE);
         break;
-#if 0
-        case MOTOR6_ID:
-            frame->buf[1] = get_lockTarget_adjusted_value(0xfe);
-            frame->buf[2] = get_lockTarget_adjusted_value(0xfe);
-            break;
-#endif
       case BRAKES1_ID:
         //frame->buf[1] &= ~0x8;
+        //frame->buf[0] = 0xFF;  // asr req
         frame->buf[2] = 0x0;
-        frame->buf[3] = 0xA;
+        frame->buf[3] = get_lockTarget_adjusted_value(0xA);
         break;
 
       case BRAKES3_ID:
-        adjusted_slip = get_lockTarget_adjusted_value(0xFF);
-        frame->buf[0] = adjusted_slip;
+        //adjusted_slip = get_lockTarget_adjusted_value(0xFE);
+        frame->buf[0] = get_lockTarget_adjusted_value(0xFE);
         frame->buf[1] = 0xA;
-        frame->buf[2] = adjusted_slip;
+        frame->buf[2] = get_lockTarget_adjusted_value(0xFE);
         frame->buf[3] = 0xA;
         frame->buf[4] = 0x0;
         frame->buf[5] = 0xA;

@@ -106,8 +106,9 @@ void onBodyRX(const CAN_message_t &frame) {
         break;
       case MOTOR2_ID:
         {
-          int calc_speed = (frame.buf[3] * 100 * 128) / 10000;  // byte 3 is 'vfzg'
-          vehicleSpeed = (byte)(calc_speed >= 255 ? 255 : calc_speed);
+          //int calc_speed = (frame.buf[3] * 100 * 128) / 10000;  // byte 3 is 'vfzg'
+          //vehicleSpeed = calc_speed >= 255 ? 255 : calc_speed;
+          vehicleSpeed = frame.buf[3] * 1.28;
           break;
         }
       case openHaldex_ID:
@@ -137,12 +138,10 @@ void onBodyRX(const CAN_message_t &frame) {
 
     if (state.mode == MODE_FWD) {
       // If FWD mode then literally zero out everything going from chassis to haldex
-      //sendOpenFrame_Gen1();
-      //getLockData(&frame_out);
       if (haldexGen == 1) {
-        memset(frame_out.buf, 0xFF, frame_out.len);  //0xFF seems to work best...
+        //memset(frame_out.buf, 0xFF, frame_out.len);  //0xFF seems to work best...
       }
-      if (haldexGen == 4) {
+      if (haldexGen == 1 || haldexGen == 4) {
         getLockData(&frame_out);  // parse data for 5050/custom
       }
     }

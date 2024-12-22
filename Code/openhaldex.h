@@ -8,7 +8,7 @@
 
 /* Defines */
 // Debug statements
-#define HaldexCANDebug 1       // if 1, will print CAN 1 (Haldex) messages
+#define HaldexCANDebug 0       // if 1, will print CAN 1 (Haldex) messages
 #define ChassisCANDebug 0      // if 1, will print CAN 2 (Chassis) messages
 #define stateDebug 1           // if 1, will Serial print
 #define canTestData 0          // if 1, will send a 'fake' CAN message to both Chassis & Haldex (for debug/testing ONLY)

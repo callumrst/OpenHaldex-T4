@@ -4,6 +4,7 @@ Revised 24/10/2024 @ 14:45
 V1.00 - Initial release to public
 V1.02 - Adjusted locking code...
 V1.05 - Added multi-generation options.  Adjustable in _defs.h
+V1.06 - Gen4 confirmed working, released to public
 */
 
 #include "openhaldex.h"
@@ -16,7 +17,7 @@ byte ped_threshold;
 byte dummyVehicleSpeed;
 
 int buttonToggle;
-int softwareVersion = 105;  // softwareVersion 1.02
+int softwareVersion = 106;
 bool isCustom;
 int lastMode;
 bool isScreen = false;
