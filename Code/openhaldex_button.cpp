@@ -1,4 +1,7 @@
 #include "openhaldex.h"
+/*
+Button handling - consider changing to a button lib 
+*/
 
 void checkSwitchMode() {
   int i = 0;
@@ -75,45 +78,4 @@ void checkSwitchMode() {
   }
 
   delay(300);  // reduce button bashing
-}
-
-void LED() {
-  switch (state.mode) {
-    case MODE_STOCK:
-      analogWrite(pinLED_R, 10);
-      analogWrite(pinLED_G, 0);
-      analogWrite(pinLED_B, 0);
-      break;
-
-    case MODE_FWD:
-      analogWrite(pinLED_R, 0);
-      analogWrite(pinLED_G, 10);
-      analogWrite(pinLED_B, 0);
-      break;
-
-    case MODE_5050:
-      analogWrite(pinLED_R, 0);
-      analogWrite(pinLED_G, 0);
-      analogWrite(pinLED_B, 10);
-      break;
-
-    case MODE_CUSTOM:
-      analogWrite(pinLED_R, 5);
-      analogWrite(pinLED_G, 0);
-      analogWrite(pinLED_B, 5);
-      break;
-  }
-}
-
-void blinkLED(int duration, int flashes, int R, int G, int B) {
-  for (int i = 0; i < flashes; i++) {
-    delay(duration);
-    analogWrite(pinLED_R, R);
-    analogWrite(pinLED_G, G);
-    analogWrite(pinLED_B, B);
-    delay(duration);
-    analogWrite(pinLED_R, 0);
-    analogWrite(pinLED_G, 0);
-    analogWrite(pinLED_B, 0);
-  }
 }

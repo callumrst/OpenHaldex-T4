@@ -1,6 +1,7 @@
 #include "openhaldex.h"
+/* Bluetooth handling */
 
-// AT commands to send while in AT Mode / HC05 setup
+// AT commands to send while in AT Mode / HC05 setup.  Capture all in a String array for easier sending
 String atCommands[8] = { "AT",
                          "AT+UART=9600,0,0",
                          "AT+NAME=OpenHaldexT4",
@@ -48,7 +49,7 @@ bool btSendStatus(void *params) {
   return true;
 }
 
-void btProcess(bt_packet *rx_packet) {
+void btGetStatus(bt_packet *rx_packet) {
   byte lockpoint_index;
   bt_packet tx_packet;
 
@@ -146,13 +147,13 @@ void btProcess(bt_packet *rx_packet) {
 void btInit() {
   uint8_t at_buf[128] = { 0 };  // allocate buffer for Bluetooth module Serial messages
 
-  // drive all LEDs low to save power!
+  // drive all LEDs low to save power - HC05 uses a lot of current on setup
   digitalWrite(pinLED_R, LOW);
   digitalWrite(pinLED_G, LOW);
   digitalWrite(pinLED_B, LOW);
 
 #if stateDebug
-  Serial.println(F("Entering Bluetooth setup mode..."));  // start Bluetooth setup mode after init reset/conf 'buttons'
+  Serial.println(F("Entering Bluetooth setup mode..."));  // start Bluetooth setup (AT) mode after init reset/conf 'buttons'
 #endif 
 
   pinMode(pinBT_Conf, OUTPUT);

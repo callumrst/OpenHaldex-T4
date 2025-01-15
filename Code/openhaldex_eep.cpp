@@ -79,6 +79,7 @@ bool writeEEP(void *params) {
   Serial.printf("Last Mode: %d\n", lastMode);
   Serial.printf("Is Standalone: %d\n", isStandalone);
   Serial.printf("Minimum Pedal: %d%\n", state.ped_threshold);
+  Serial.printf("Haldex Engagement: %d%\n", haldexEngagement);
 #endif /* stateDebug */
 
   return true;

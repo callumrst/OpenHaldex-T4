@@ -1,4 +1,8 @@
-#define haldexGen 1  // Generation for Haldex (1, 4) - used in addresses
+/*
+CAN Addresses
+*/
+
+#define haldexGen 4  // Generation for Haldex (1, 4) - used in addresses
 
 // ***** Generation 1 Haldex Addresses *****
 #if (haldexGen == 1)
@@ -76,16 +80,6 @@
 #define APP_MSG_CUSTOM_CTRL 3
 #define APP_MSG_IS_SCREEN 4
 
-#define serialPacketEnd 0xff
-
-#define arraySize(array) (sizeof((array)) / sizeof((array)[0]))
-
-typedef struct can_s {
-  byte status;
-  bool inited;
-  const char* name;
-} can_s;
-
 typedef enum openhaldex_mode_id {
   MODE_STOCK,
   MODE_FWD,
@@ -117,3 +111,4 @@ typedef struct bt_packet {
   byte len;
   byte data[12];
 } bt_packet;
+

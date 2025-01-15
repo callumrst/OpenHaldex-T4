@@ -1,13 +1,20 @@
 /** Forbes Automotive - OpenHaldex T4 ***
-Revised 24/10/2024 @ 14:45
+Revised 11/01/2025
+
+OpenHaldex allows the parsing of CAN messages from Gen1 & Gen4 platforms and edits before sending to the Haldex Controller.  It can emulate ECU & ABS signals - so can operate entirely in standalone mode.
+Gen2, 3 & 5 needs support.
+
+ALL CAN messages are parsed directly from the library, so there's very little to do in 'loop'
 
 V1.00 - Initial release to public
 V1.02 - Adjusted locking code...
 V1.05 - Added multi-generation options.  Adjustable in _defs.h
 V1.06 - Gen4 confirmed working, released to public
+V1.07 - Further understanding of frames - now added a '_notes.h' section to document findings
 */
 
 #include "openhaldex.h"
+auto timer = timer_create_default();
 
 openhaldexState state;
 byte haldexState;
@@ -17,58 +24,28 @@ byte ped_threshold;
 byte dummyVehicleSpeed;
 
 int buttonToggle;
-int softwareVersion = 106;
-bool isCustom;
 int lastMode;
+
+int i = 0;
+int bremes1Counter = 0;
+int temp = 0;
+int softwareVersion = 108;
+
+uint32_t lastTransmission = 0;
+
+bool isCustom;
 bool isScreen = false;
 bool isStandalone;
-int i = 0;
-uint32_t lastTransmission = 0;
 bool btConnected = false;
-
-auto timer = timer_create_default();  // for repeatable tasks
-
-bool printMode(void *params) {
-  Serial.printf("OpenHaldex mode=%d\n", state.mode);
-  return true;
-}
+bool reportClutch1 = false;
+bool tempProtection = false;
+bool reportClutch2 = false;
+bool couplingOpen = false;
+bool speedLimit = false;
 
 void setup() {
-#if stateDebug
-  Serial.begin(baudSerial);
-  Serial.println(F("\nOpenHaldex - Teensy 4.0 Initialisation..."));
-  Serial.printf("Running at %dMHz\r\n", F_CPU_ACTUAL / (1000 * 1000));
-#endif /* stateDebug */
-
-#if stateDebug
-  Serial.println(F("Bluetooth initialising..."));
-#endif
-  Serial2.begin(baudBT);
-#if stateDebug
-  Serial.println(F("Bluetooth initialised!"));
-#endif
-
-  setupPins();  // setup IO
-  canInit();    // begin CAN
-  readEEP();    // read EEPROM for saved preferences
-
-  timer.every(2500, btSendStatus);  // send Bluetooth Status back to App/Screen if connected every 1000ms
-  timer.every(2500, writeEEP);      // write EEP (using 'update' to minimise writes) every 2500ms
-
-#if stateDebug
-  timer.every(1000, printMode);  // serial output for current mode
-#endif
-
-#if canTestData
-  timer.every(50, sendCanTest);  // for printing test CAN messages
-  timer.every(1000, printMB_Status);
-#endif
-
-#if broadcastOpenHaldex
-  timer.every(50, castOpenHaldex);  // for printing CAN messages to FIS/CAN
-#endif
-
-  timer.every(20, sendStandaloneCAN);  // send standalone CAN messages every 20ms.  Don't capture in an 'if' as it may change during execution...
+  // initialise the module, put into a separate function because of all of the debug statements, keeps this cleaner
+  basicInit(); // in '_io/
 }
 
 void loop() {
@@ -85,7 +62,7 @@ void loop() {
   while (Serial2.available()) {
     bt_packet rx_packet = { 0 };
     rx_packet.len = Serial2.readBytesUntil(serialPacketEnd, rx_packet.data, arraySize(rx_packet.data));
-    btProcess(&rx_packet);
+    btGetStatus(&rx_packet);
   }
 
   if (digitalRead(pinBT_Conf)) {
@@ -93,40 +70,25 @@ void loop() {
   }
 
   // light up the LED as per the 'state.mode'
-  LED();
+  LED(); // in '_io'
 }
 
-void setupPins() {
-  // Disable unwanted Teensy optionals
-  CCM_ANALOG_PLL_AUDIO |= CCM_ANALOG_PLL_AUDIO_POWERDOWN;
-  CCM_ANALOG_PLL_VIDEO |= CCM_ANALOG_PLL_VIDEO_POWERDOWN;
-  CCM_ANALOG_PLL_ENET |= CCM_ANALOG_PLL_ENET_POWERDOWN;
+void setupTimers(){
+  timer.every(2500, btSendStatus);  // send Bluetooth Status back to App/Screen if connected every 1000ms
+  timer.every(2500, writeEEP);      // write EEP (using 'update' to minimise writes) every 2500ms
 
-  // Turn off the power LED for power saving
-  pinMode(LED_BUILTIN, OUTPUT);
+#if stateDebug
+  timer.every(1000, printMode);  // serial output for current mode
+#endif
 
-  // Setup the RGB LED pins for outputs
-  pinMode(pinLED_R, OUTPUT);
-  pinMode(pinLED_G, OUTPUT);
-  pinMode(pinLED_B, OUTPUT);
+#if canTestData
+  timer.every(50, sendCanTest);  // for printing test CAN messages
+  timer.every(1000, printMB_Status);
+#endif
 
-  // Setup the switches (Switch Mode & Bluetooth) for interrupt / inputs (keeps response quick)
-  // can't have BT_Conf as an interrupt and change the pin state...
-  pinMode(pinBT_Conf, INPUT);
+#if broadcastOpenHaldex
+  timer.every(50, castOpenHaldex);  // for parsing CAN messages to FIS/Ignitron etc
+#endif
 
-  // if BT Conf is high on boot, flash 'Haldex Gen' as a number (1 flash = Gen1, 2 flashes = Gen2...)
-  if (digitalRead(pinBT_Conf)) {
-    blinkLED(2000, haldexGen, 255, 0, 0);
-
-    // since BT_Conf is tied to the HC05 it goes into AT mode during power up, so reset it back at normal AT mode...
-    pinMode(pinBT_Conf, OUTPUT);
-    pinMode(pinBT_Reset, OUTPUT);
-    digitalWrite(pinBT_Reset, LOW);
-    digitalWrite(pinBT_Conf, LOW);
-    delay(2500);
-    pinMode(pinBT_Reset, INPUT);
-    pinMode(pinBT_Conf, INPUT);
-  }
-
-  attachInterrupt(pinSwitchMode, checkSwitchMode, HIGH);
+  timer.every(20, sendStandaloneCAN);  // send standalone CAN messages every 20ms.  Don't capture in an 'if' as it may change during execution...
 }
