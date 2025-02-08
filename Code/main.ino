@@ -2,7 +2,7 @@
 Revised 11/01/2025
 
 OpenHaldex allows the parsing of CAN messages from Gen1 & Gen4 platforms and edits before sending to the Haldex Controller.  It can emulate ECU & ABS signals - so can operate entirely in standalone mode.
-Gen2, 3 & 5 needs support.
+Gen3 & 5 needs support.  Gen2 in production.
 
 ALL CAN messages are parsed directly from the library, so there's very little to do in 'loop'
 
@@ -10,7 +10,8 @@ V1.00 - Initial release to public
 V1.02 - Adjusted locking code...
 V1.05 - Added multi-generation options.  Adjustable in _defs.h
 V1.06 - Gen4 confirmed working, released to public
-V1.07 - Further understanding of frames - now added a '_notes.h' section to document findings
+V1.07 - Gen4 confirmed working, released to public
+V1.08 - Further understanding of frames - now added a '_notes.h' section to document findings
 */
 
 #include "openhaldex.h"
@@ -45,7 +46,7 @@ bool speedLimit = false;
 
 void setup() {
   // initialise the module, put into a separate function because of all of the debug statements, keeps this cleaner
-  basicInit(); // in '_io/
+  basicInit();  // in '_io/
 }
 
 void loop() {
@@ -70,20 +71,15 @@ void loop() {
   }
 
   // light up the LED as per the 'state.mode'
-  LED(); // in '_io'
+  LED();  // in '_io'
 }
 
-void setupTimers(){
+void setupTimers() {                // try to move into a separate subroutine
   timer.every(2500, btSendStatus);  // send Bluetooth Status back to App/Screen if connected every 1000ms
   timer.every(2500, writeEEP);      // write EEP (using 'update' to minimise writes) every 2500ms
 
 #if stateDebug
   timer.every(1000, printMode);  // serial output for current mode
-#endif
-
-#if canTestData
-  timer.every(50, sendCanTest);  // for printing test CAN messages
-  timer.every(1000, printMB_Status);
 #endif
 
 #if broadcastOpenHaldex

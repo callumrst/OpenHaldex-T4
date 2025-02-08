@@ -136,7 +136,7 @@ void onBodyRX(const CAN_message_t &frame) {
         //memset(frame_out.buf, 0xFF, frame_out.len);  //0xFF seems to work best...
       }
       if (haldexGen == 1 || haldexGen == 4) {
-        getLockData(&frame_out);  // parse data for 5050/custom
+        getLockData(&frame_out);  // parse data for FWD/5050/custom
       }
     }
 
@@ -177,69 +177,7 @@ void onBodyRX(const CAN_message_t &frame) {
   }
 }
 
-void sendOpenFrame_Gen1() {
-  // write an empty frame to every ID, will stop all comms to the Haldex pump.  All data should be '0xFF' to null any work
-  CAN_message_t motor1;
-  motor1.id = MOTOR1_ID;
-  motor1.len = 8;
-  motor1.buf[0] = 0x00;  // various individual bits ('space gas', driving pedal, kick down, clutch, timeout brake, brake intervention, drinks-torque intervention?) was 0x01
-  motor1.buf[1] = 0x00;  // inner engine moment (%): 0.39*(0xF0 / 250) = 97.5% (93.6% <> 0xf0)
-  motor1.buf[2] = 0x00;  // motor speed (rpm): 32 > (low byte) -
-  motor1.buf[3] = 0x00;  //  motor speed (rpm): 78 > (high byte) : 0.25 * (32 78) = 819.5 RPM (was 0x4e)  Turns pre-charge pump on / off (0x00 = off, >0x00 = on)
-  motor1.buf[4] = 0x00;  // inner moment (%): 0.39*(0xF0) = 93.6%  (make FE?)
-  motor1.buf[5] = 0x00;  // driving pedal (%): 0.39*(0xF0) = 93.6%  (make FE?)
-  motor1.buf[6] = 0x00;  // torque loss (%): 0.39*(0x20) = 12.48%? (make FE?) slippage?
-  motor1.buf[7] = 0x00;  // drivers moment (%): 0.39*(0xF0) = 93.6%  (make FE?)
-  HaldexCAN.write(motor1);
-
-  CAN_message_t motor3;
-  motor3.id = MOTOR3_ID;
-  motor3.len = 8;
-  motor3.buf[0] = 0x00;  // various individual bits ('motor has been launched, only in diesel')
-  motor3.buf[1] = 0x50;  // outdoor temperature
-  motor3.buf[2] = 0x00;  // pedal
-  motor3.buf[3] = 0x00;  // wheel command torque (low byte).  If SY_ASG
-  motor3.buf[4] = 0x00;  // wheel command torque (high byte).  If SY_ASG
-  motor3.buf[5] = 0x00;  // wheel command torque (0 = positive, 1 = negative).  If SY_ASG
-  motor3.buf[6] = 0x00;  // req. torque.  If SY_ASG
-  motor3.buf[7] = 0x00;  // throttle angle (100%)
-  HaldexCAN.write(motor3);
-
-  bremes1Counter++;
-  if (bremes1Counter > 15) {
-    bremes1Counter = 0;
-  }
-
-  CAN_message_t brakes1;
-  byte bremseDiag = 0;
-  bitWrite(bremseDiag, 7, 1);  // force ABS in diag to disable clutch - bit 7
-  brakes1.id = BRAKES1_ID;
-  brakes1.len = 8;
-  brakes1.buf[0] = 0x80;        // asr req was 0x80
-  brakes1.buf[1] = bremseDiag;  // was 0x41 - clutch engage / disengage
-  brakes1.buf[2] = 0x00;
-  brakes1.buf[3] = 0x00;  // was 0xF4
-  brakes1.buf[4] = 0x00;  // was 0xFE
-  brakes1.buf[5] = 0x00;  // was 0xFE
-  brakes1.buf[6] = 0x00;
-  brakes1.buf[7] = bremes1Counter;  // was 0x1E
-  HaldexCAN.write(brakes1);
-
-  CAN_message_t brakes3;
-  brakes3.id = BRAKES3_ID;
-  brakes3.len = 8;
-  brakes3.buf[0] = 0x00;  // low byte, LEFT Front
-  brakes3.buf[1] = 0x00;  // high byte, LEFT Front
-  brakes3.buf[2] = 0x00;  // low byte, RIGHT Front
-  brakes3.buf[3] = 0x00;  // high byte, RIGHT Front
-  brakes3.buf[4] = 0x00;  // low byte, LEFT Rear
-  brakes3.buf[5] = 0x00;  // high byte, LEFT Rear // 254+10? (5050 returns 0xA)
-  brakes3.buf[6] = 0x00;  // low byte, RIGHT Rear
-  brakes3.buf[7] = 0x00;  // low byte, RIGHT Rear  // 254+10?
-  HaldexCAN.write(brakes3);
-}
-
-void send5050Frame_Gen1() {
+void sendStandaloneFrame_Gen1() {
   lockTarget = getLockTargetAdjustment();  // use to get initial lock target.  Will return 100% if 5050, 0 if FWD or xx if custom
 
   CAN_message_t motor1;
@@ -251,7 +189,7 @@ void send5050Frame_Gen1() {
   motor1.buf[3] = getLockTargetAdjustedValue(0x4E, false);  // motor speed (rpm): 78 > (high byte) : 0.25 * (32 78) = 819.5 RPM (was 0x4e)  Runs pre-charge pump if >0 has a good impact on lock.  Used
   motor1.buf[4] = 0x00;                                     // inner moment (%): 0.39*(0xF0) = 93.6%  (make FE?) - ignored
   motor1.buf[5] = 0x00;                                     // driving pedal (%): 0.39*(0xF0) = 93.6%  (make FE?) - ignored
-  motor1.buf[6] = getLockTargetAdjustedValue(0x16, false);  // torque loss (%): 0.39*(0x20) = 12.48%? (make FE?) slippage.  0x20 makes 198, 0xFE makes 131.  Major effect
+  motor1.buf[6] = getLockTargetAdjustedValue(0x16, true);   // torque loss (%): 0.39*(0x20) = 12.48%? (make FE?) slippage.  0x20 makes 198, 0xFE makes 131.  Major effect
   motor1.buf[7] = 0x00;                                     // drivers moment (%): 0.39*(0xF0) = 93.6%  (make FE?) - ignored
   HaldexCAN.write(motor1);
 
@@ -275,13 +213,13 @@ void send5050Frame_Gen1() {
   }
   brakes1.id = BRAKES1_ID;
   brakes1.len = 8;
-  brakes1.buf[0] = 0x80;                                    // asr req
+  brakes1.buf[0] = 0x80;                                     // asr req
   brakes1.buf[1] = getLockTargetAdjustedValue(0x00, false);  // also controlling slippage.  Brake force can add 20%
-  brakes1.buf[2] = 0x00;  //  ignored
-  brakes1.buf[3] = 0xA;   // 0xA ignored?
-  brakes1.buf[4] = 0xFE;  // ignored
-  brakes1.buf[5] = 0xFE;  // ignored
-  brakes1.buf[6] = 0x00;  // ignored
+  brakes1.buf[2] = 0x00;                                     //  ignored
+  brakes1.buf[3] = 0xA;                                      // 0xA ignored?
+  brakes1.buf[4] = 0xFE;                                     // ignored
+  brakes1.buf[5] = 0xFE;                                     // ignored
+  brakes1.buf[6] = 0x00;                                     // ignored
   brakes1.buf[7] = bremes1Counter;
   HaldexCAN.write(brakes1);
 
@@ -299,55 +237,7 @@ void send5050Frame_Gen1() {
   HaldexCAN.write(brakes3);
 }
 
-void sendOpenFrame_Gen2() {
-  // write an empty frame to every ID, will stop all comms to the Haldex pump.  All data should be '0xFF' to null any work
-  CAN_message_t motor1;  //280
-  motor1.id = MOTOR1_ID;
-  motor1.len = 8;
-  motor1.buf[0] = 0xFF;  // inner engine moment (%): 0.39*(0xF0) = 93.6%  (make FE?) (was 0xf0)
-  motor1.buf[1] = 0xFF;  // was C3
-  motor1.buf[2] = 0xFF;  // motor speed (rpm): 32 >
-  motor1.buf[3] = 0xFF;  // motor speed (rpm): 78 > 0.25 * 3278 = 819.5 RPM (was 0x4e)  Leave RPM the same?
-  motor1.buf[4] = 0xFF;  // was 22
-  motor1.buf[5] = 0xFF;  // driving pedal (%): 0.39*(0xF0) = 93.6%  (make FE?)
-  motor1.buf[6] = 0xFF;  // was 22
-  motor1.buf[7] = 0xFF;  // was 22
-  HaldexCAN.write(motor1);
-
-  CAN_message_t motor3;  //380
-  motor3.id = MOTOR3_ID;
-  motor3.len = 8;
-  motor3.buf[0] = 0xFF;  // inner engine moment (%): 0.39*(0xF0) = 93.6%  (make FE?) (was 0xf0)
-  motor3.buf[1] = 0xFF;  // was 5E
-  motor3.buf[2] = 0xFF;  // motor speed (rpm): 32 >
-  motor3.buf[3] = 0xFF;  // motor speed (rpm): 78 > 0.25 * 3278 = 819.5 RPM (was 0x4e)  Leave RPM the same?
-  motor3.buf[4] = 0xFF;  // was A0
-  motor3.buf[5] = 0xFF;  // was A0
-  motor3.buf[6] = 0xFF;  // torque loss (%): 0.39*(0x20) = 12.48%? (make FE?) slippage?
-  motor3.buf[7] = 0xFF;  // was 04
-  HaldexCAN.write(motor3);
-
-  CAN_message_t brakes1;
-  brakes1.id = BRAKES1_ID;
-  brakes1.len = 1;
-  brakes1.buf[0] = 0xFF;  // asr req
-  HaldexCAN.write(brakes1);
-
-  CAN_message_t brakes3;
-  brakes3.id = BRAKES3_ID;
-  brakes3.len = 8;
-  brakes3.buf[0] = 0xFF;  // low byte, LEFT Front
-  brakes3.buf[1] = 0xFF;  // high byte, LEFT Front
-  brakes3.buf[2] = 0xFF;  // low byte, RIGHT Front
-  brakes3.buf[3] = 0xFF;  // high byte, RIGHT Front
-  brakes3.buf[4] = 0xFF;  // low byte, LEFT Rear
-  brakes3.buf[5] = 0xFF;  // high byte, LEFT Rear // 254+10? (5050 returns 0xA)
-  brakes3.buf[6] = 0xFF;  // low byte, RIGHT Rear
-  brakes3.buf[7] = 0xFF;  // low byte, RIGHT Rear  // 254+10?
-  HaldexCAN.write(brakes3);
-}
-
-void send5050Frame_Gen2() {
+void sendStandaloneFrame_Gen2() {
   CAN_message_t motor1;
   motor1.id = MOTOR1_ID;
   motor1.len = 8;
@@ -401,55 +291,7 @@ void send5050Frame_Gen2() {
   HaldexCAN.write(brakes3);
 }
 
-void sendOpenFrame_Gen4() {
-  // write an empty frame to every ID, will stop all comms to the Haldex pump.  All data should be '0xFF' to null any work
-  CAN_message_t motor1;  //280
-  motor1.id = MOTOR1_ID;
-  motor1.len = 8;
-  motor1.buf[0] = 0xFF;  // inner engine moment (%): 0.39*(0xF0) = 93.6%  (make FE?) (was 0xf0)
-  motor1.buf[1] = 0xFF;  // was C3
-  motor1.buf[2] = 0xFF;  // motor speed (rpm): 32 >
-  motor1.buf[3] = 0xFF;  // motor speed (rpm): 78 > 0.25 * 3278 = 819.5 RPM (was 0x4e)  Leave RPM the same?
-  motor1.buf[4] = 0xFF;  // was 22
-  motor1.buf[5] = 0xFF;  // driving pedal (%): 0.39*(0xF0) = 93.6%  (make FE?)
-  motor1.buf[6] = 0xFF;  // was 22
-  motor1.buf[7] = 0xFF;  // was 22
-  HaldexCAN.write(motor1);
-
-  CAN_message_t motor3;  //380
-  motor3.id = MOTOR3_ID;
-  motor3.len = 8;
-  motor3.buf[0] = 0xFF;  // inner engine moment (%): 0.39*(0xF0) = 93.6%  (make FE?) (was 0xf0)
-  motor3.buf[1] = 0xFF;  // was 5E
-  motor3.buf[2] = 0xFF;  // motor speed (rpm): 32 >
-  motor3.buf[3] = 0xFF;  // motor speed (rpm): 78 > 0.25 * 3278 = 819.5 RPM (was 0x4e)  Leave RPM the same?
-  motor3.buf[4] = 0xFF;  // was A0
-  motor3.buf[5] = 0xFF;  // was A0
-  motor3.buf[6] = 0xFF;  // torque loss (%): 0.39*(0x20) = 12.48%? (make FE?) slippage?
-  motor3.buf[7] = 0xFF;  // was 04
-  HaldexCAN.write(motor3);
-
-  CAN_message_t brakes1;
-  brakes1.id = BRAKES1_ID;
-  brakes1.len = 1;
-  brakes1.buf[0] = 0xFF;  // asr req
-  HaldexCAN.write(brakes1);
-
-  CAN_message_t brakes3;
-  brakes3.id = BRAKES3_ID;
-  brakes3.len = 8;
-  brakes3.buf[0] = 0xFF;  // low byte, LEFT Front
-  brakes3.buf[1] = 0xFF;  // high byte, LEFT Front
-  brakes3.buf[2] = 0xFF;  // low byte, RIGHT Front
-  brakes3.buf[3] = 0xFF;  // high byte, RIGHT Front
-  brakes3.buf[4] = 0xFF;  // low byte, LEFT Rear
-  brakes3.buf[5] = 0xFF;  // high byte, LEFT Rear // 254+10? (5050 returns 0xA)
-  brakes3.buf[6] = 0xFF;  // low byte, RIGHT Rear
-  brakes3.buf[7] = 0xFF;  // low byte, RIGHT Rear  // 254+10?
-  HaldexCAN.write(brakes3);
-}
-
-void send5050Frame_Gen4() {
+void sendStandaloneFrame_Gen4() {
   CAN_message_t motor1;
   motor1.id = MOTOR1_ID;
   motor1.len = 8;
@@ -525,29 +367,17 @@ bool castOpenHaldex(void *params) {
 }
 
 bool sendStandaloneCAN(void *params) {
-  // if isStandalone, will send FWD or 5050 signal to Haldex to 'force' every 20ms (using Timer)
+  // if isStandalone, will send FWD or 5050 signal to Haldex to 'force' every 20ms (using Timer).  Note timer will be running regardless, so check if even standalone or frames would be sent as well...
   if (isStandalone) {
-    if (state.mode == MODE_FWD) {
+    if (state.mode == MODE_FWD || state.mode == MODE_5050) {
       if (haldexGen == 1) {
-        send5050Frame_Gen1();
+        sendStandaloneFrame_Gen1();
       }
       if (haldexGen == 2) {
-        sendOpenFrame_Gen2();
+        sendStandaloneFrame_Gen2();
       }
       if (haldexGen == 4) {
-        sendOpenFrame_Gen4();
-      }
-    }
-
-    if (state.mode == MODE_5050) {
-      if (haldexGen == 1) {
-        send5050Frame_Gen1();
-      }
-      if (haldexGen == 2) {
-        send5050Frame_Gen2();
-      }
-      if (haldexGen == 4) {
-        send5050Frame_Gen4();
+        sendStandaloneFrame_Gen4();
       }
     }
   }

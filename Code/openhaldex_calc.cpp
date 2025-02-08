@@ -57,13 +57,13 @@ uint8_t getLockTargetAdjustedValue(uint8_t value, bool invert) {
   if (state.mode == MODE_5050) {
     if (pedValue >= state.ped_threshold || state.ped_threshold == 0 || pedValue >= 10) {
       if (invert) {
-        return (255 - value);
+        return (254 - value);
       } else {
         return value;
       }
     } else {
       if (invert) {
-        return (255 - 0);
+        return (254 - 0);
       } else {
         return 0;
       }
@@ -71,7 +71,12 @@ uint8_t getLockTargetAdjustedValue(uint8_t value, bool invert) {
   } else {
     // Potentially avoid doing math below..
     if (lockTarget == 0) {
-      return 0;
+      if (invert) {
+        return (254 - 0);
+      } else {
+        return 0;
+      }
+      //return 0;
     }
 
     /* Hackery to get the response closer to the target... we are trying to control the
@@ -80,7 +85,7 @@ uint8_t getLockTargetAdjustedValue(uint8_t value, bool invert) {
     float target_fudge_factor = lockTarget;
     target_fudge_factor = (target_fudge_factor / 2) + 20;
     if (invert) {
-      return 255 - (value * (target_fudge_factor / 100));
+      return 254 - (value * (target_fudge_factor / 100));
     } else {
       return value * (target_fudge_factor / 100);
     }
@@ -97,11 +102,11 @@ void getLockData(CAN_message_t *frame) {
       case MOTOR1_ID:
         //frame->buf[0] = 0;
         frame->buf[1] = getLockTargetAdjustedValue(0xFE, false);  // engine moment
-        frame->buf[2] = 0x21;  // low byte rpm
+        frame->buf[2] = 0x21;                                     // low byte rpm
         frame->buf[3] = getLockTargetAdjustedValue(0x4E, false);  // high byte rpm - runs pre-charge pump if >0
         //frame->buf[4] = 0x00;  // inner moment
         //frame->buf[5] = 0x00;  // pedal
-        frame->buf[6] = getLockTargetAdjustedValue(0x16, true);   // torque loss/slippage.  0x20 makes 198, 0xFE makes 131, 0xFF makes 198
+        frame->buf[6] = getLockTargetAdjustedValue(0x16, true);  // torque loss/slippage.  0x20 makes 198, 0xFE makes 131, 0xFF makes 198
         //frame->buf[7] = 0x00;  // drivers moment
         break;
       case MOTOR3_ID:
@@ -142,7 +147,7 @@ void getLockData(CAN_message_t *frame) {
         frame->buf[3] = getLockTargetAdjustedValue(0x4E, false);  // engine speed  nmot_c high byte
         //frame->buf[4] = 0x00;  // external moment? MDNORM mifab_w.  Torque without external intervention
         //frame->buf[5] = 0x00;  // throttle pedal wpedc
-        frame->buf[6] = getLockTargetAdjustedValue(0x16, false);   // mdverlc was 20; mdverlc - torque loss
+        frame->buf[6] = getLockTargetAdjustedValue(0x16, false);  // mdverlc was 20; mdverlc - torque loss
         //frame->buf[7] = getLockTargetAdjustedValue(0xFE, false);  // Fahrerwunschmoment mivbeb_w - driver's request
         break;
       case MOTOR3_ID:
@@ -162,7 +167,7 @@ void getLockData(CAN_message_t *frame) {
       case BRAKES1_ID:
         //frame->buf[1] &= ~0x8;
         //frame->buf[0] = 0x00;                                     // set ASR/MSR/ABS to 0?
-        frame->buf[1] = getLockTargetAdjustedValue(0x00, false);                                     // ASR switching influence;
+        frame->buf[1] = getLockTargetAdjustedValue(0x00, false);  // ASR switching influence;
         frame->buf[2] = getLockTargetAdjustedValue(0xFE, false);  // vamsr_c
         frame->buf[3] = 0xA;                                      // vamsr_c
         break;

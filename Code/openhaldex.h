@@ -15,7 +15,7 @@
 
 // Serial / Serial2 specifics
 #define baudSerial 115200  // Serial communication baud rate
-#define baudBT 9600        // Bluetooth Baud Rate (default is 9600).  AT Setup is 38400
+#define baudBT 19200        // Bluetooth Baud Rate (default is 9600).  AT Setup is 38400
 #define btTimeout 8000     // Bluetooth timeout before registering 'not connected'
 
 // Pin IO
@@ -90,12 +90,9 @@ extern uint8_t getLockTargetAdjustedValue(uint8_t value, bool invert);
 extern bool sendCanTest(void *params);
 extern bool sendStandaloneCAN(void *params);
 extern bool castOpenHaldex(void *params);
-extern void sendOpenFrame_Gen1();
-extern void send5050Frame_Gen1();
-extern void sendOpenFrame_Gen2();
-extern void send5050Frame_Gen2();
-extern void sendOpenFrame_Gen4();
-extern void send5050Frame_Gen4();
+extern void sendStandaloneFrame_Gen1();
+extern void sendStandaloneFrame_Gen2();
+extern void sendStandaloneFrame_Gen4();
 
 // CAN Events & Mailbox
 extern void serviceCanEvents(void);

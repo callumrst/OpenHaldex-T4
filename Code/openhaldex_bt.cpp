@@ -3,7 +3,7 @@
 
 // AT commands to send while in AT Mode / HC05 setup.  Capture all in a String array for easier sending
 String atCommands[8] = { "AT",
-                         "AT+UART=9600,0,0",
+                         "AT+UART=19200,0,0",
                          "AT+NAME=OpenHaldexT4",
                          "AT+ROLE=0",
                          "AT+CMODE=0",

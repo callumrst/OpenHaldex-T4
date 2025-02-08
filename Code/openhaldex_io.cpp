@@ -1,7 +1,7 @@
 #include "openhaldex.h"
 
 bool printMode(void *params) {
-  Serial.printf("OpenHaldex mode=%d\n", state.mode);
+  Serial.printf("OpenHaldex Mode = %d\n", state.mode);
   return true;
 }
 
