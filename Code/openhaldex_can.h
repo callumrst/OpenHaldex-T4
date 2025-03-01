@@ -153,7 +153,7 @@ void onChassisRX(const CAN_message_t &frame) {
   // Edit the CAN frame, if not in STOCK mode (otherwise, the original frame is already copied in the new buffer).
   if (state.mode != MODE_STOCK) {
     // Edit the frame (only Gen1 and Gen4 supported).
-    if (HALDEX_GENERATION == 1 || HALDEX_GENERATION == 4) {
+    if (HALDEX_GENERATION == 1 || HALDEX_GENERATION == 2 || HALDEX_GENERATION == 4) {
       get_lock_data(frame_out);
     }
     // For other generations, frames are not edited yet.

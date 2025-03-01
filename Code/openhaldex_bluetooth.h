@@ -23,7 +23,7 @@
 const char *AT_commands[] =
 {
   "AT",
-  "AT+UART=9600,0,0",
+  "AT+UART=19200,0,0",
   "AT+NAME=OpenHaldexT4",
   "AT+ROLE=0",
   "AT+CMODE=0",
@@ -88,7 +88,7 @@ void config_BT()
 
   // Reconfigure the serial port with the baud rate necessary for normal Bluetooth communication.
   BT.end();
-  BT.begin(9600);
+  BT.begin(19200);
 
   DEBUG("Bluetooth done pairing");
 }

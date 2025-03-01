@@ -61,7 +61,7 @@ float get_lock_target_adjustment() {
 uint8_t get_lock_target_adjusted_value(uint8_t value, bool invert) {
   // Handle 5050 mode.
   if (state.mode == MODE_5050) {
-    if (received_pedal_value >= state.pedal_threshold || state.pedal_threshold == 0 || received_pedal_value >= 10) {
+    if (received_pedal_value >= state.pedal_threshold || state.pedal_threshold == 0) {
       return (invert ? (0xFE - value) : value);
     }
     return (invert ? 0xFE : 0x00);
@@ -105,6 +105,37 @@ void get_lock_data(CAN_message_t &frame) {
         frame.buf[1] = get_lock_target_adjusted_value(0x00, false);
         frame.buf[2] = 0x00;
         frame.buf[3] = get_lock_target_adjusted_value(0x0A, false);
+        break;
+      case BRAKES3_ID:
+        frame.buf[0] = get_lock_target_adjusted_value(0xFE, false);
+        frame.buf[1] = 0x0A;
+        frame.buf[2] = get_lock_target_adjusted_value(0xFE, false);
+        frame.buf[3] = 0x0A;
+        frame.buf[4] = 0x00;
+        frame.buf[5] = 0x0A;
+        frame.buf[6] = 0x00;
+        frame.buf[7] = 0x0A;
+        break;
+    }
+  } else if (HALDEX_GENERATION == 2) {
+    // Edit the frames if configured as Gen2.  Currently copied from Gen4...
+    switch (frame.id) {
+      case MOTOR1_ID:
+        frame.buf[1] = get_lock_target_adjusted_value(0xFE, false);
+        frame.buf[2] = 0x20;
+        frame.buf[3] = get_lock_target_adjusted_value(0x4E, false);
+        frame.buf[6] = get_lock_target_adjusted_value(0x16, true);
+        break;
+      case MOTOR3_ID:
+        frame.buf[2] = get_lock_target_adjusted_value(0xFE, false);
+        frame.buf[7] = get_lock_target_adjusted_value(0x01, false); // gen1 is 0xFE
+        break;
+      case MOTOR6_ID:
+        break;
+      case BRAKES1_ID:
+        frame.buf[1] = get_lock_target_adjusted_value(0x00, false);
+        frame.buf[2] = get_lock_target_adjusted_value(0xFE, false); // gen1 is 0x00
+        frame.buf[3] = 0x0A;
         break;
       case BRAKES3_ID:
         frame.buf[0] = get_lock_target_adjusted_value(0xFE, false);

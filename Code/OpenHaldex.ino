@@ -4,8 +4,8 @@
 #define BROADCAST_OPENHALDEX // Comment out to disable
 
 // Debug (comment out to disable)
-#define ENABLE_DEBUG
-#define DEBUG_HALDEXCAN_TRAFFIC
+//#define ENABLE_DEBUG
+//#define DEBUG_HALDEXCAN_TRAFFIC
 //#define DEBUG_CHASSISCAN_TRAFFIC
 
 // Files
@@ -64,7 +64,7 @@ void setup()
   init_GPIO();
 
   DEBUG("Init Bluetooth");
-  BT.begin(9600);
+  BT.begin(19200);
 }
 
 void loop()
