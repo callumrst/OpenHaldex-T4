@@ -1,12 +1,12 @@
 // Settings
-#define HALDEX_GENERATION 2
+#define HALDEX_GENERATION 2\
 #define SOFTWARE_VERSION 0x006C // 0.108
 #define BROADCAST_OPENHALDEX // Comment out to disable
 
 // Debug (comment out to disable)
 #define ENABLE_DEBUG
 #define DEBUG_HALDEXCAN_TRAFFIC
-//#define DEBUG_CHASSISCAN_TRAFFIC
+#define DEBUG_CHASSISCAN_TRAFFIC
 
 // Files
 #include "openhaldex_definitions.h"
