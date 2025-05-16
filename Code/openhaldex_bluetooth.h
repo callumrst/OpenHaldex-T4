@@ -4,7 +4,7 @@
 // Settings
 #define BT Serial2
 #define BT_PACKET_END_BYTE 0xFF
-#define BT_TIMEOUT_MS 8000
+#define BT_TIMEOUT_MS 3000
 
 // Opcodes
 #define APP_MSG_MODE 0
@@ -18,6 +18,8 @@
 #define DATA_CTRL_CLEAR 1
 #define DATA_CTRL_CHECK_MODE 2
 #define DATA_CTRL_RECONNECT_BT 3
+
+bool reset_CAN();
 
 // HC-05 configuration commands
 const char *AT_commands[] =
@@ -184,6 +186,7 @@ void parse_bt_packet(const bt_packet_t &rx_packet)
         {
           custom_mode_available = false;
         }
+        reset_CAN();
 
         DEBUG("[APP_MSG_MODE] Mode:%s, PedalThreshold:%d",
               get_openhaldex_mode_string(state.mode),

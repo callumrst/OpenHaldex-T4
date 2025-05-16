@@ -5,6 +5,7 @@
 #define MODE_BUTTON_MAX_RATE_MS 300
 
 // Functions
+bool reset_CAN();
 
 void mode_button_ISR() {
   // Only process the Mode button press if enough time has passed since the last press.
@@ -55,7 +56,6 @@ void mode_button_ISR() {
   else {
     // mode_override is disabled when switching modes with the button.
     state.mode_override = false;
-    // What does mode_override do exactly? :)
 
     // Determine the next mode in the sequence.
     uint8_t next_mode = (uint8_t)state.mode + 1;
@@ -88,6 +88,7 @@ void mode_button_ISR() {
       }
     }
 
+    reset_CAN();
     DEBUG("Goto mode: %s", get_openhaldex_mode_string(state.mode));
   }
 }

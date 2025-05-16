@@ -1,0 +1,17 @@
+motor1[2] = doesn't affect, low byte of rpm
+motor1[3] = makes pump run, high byte of rpm.  > makes run 
+
+0 = 0 
+0 = 1 
+0 = 2
+0 = 3
+1 = 4 free 
+0 = 5 free
+0 = 6
+0 = 7 free
+
+brakes1[1] = controls clutch.  Brake force
+brakes3[x] = controls wheel speed and torque applied
+motor1[6] = controls slippage
+
+page 1667 is four wheel

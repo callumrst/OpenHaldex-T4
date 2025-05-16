@@ -15,6 +15,7 @@ float get_lock_target_adjustment() {
       return 0;
 
     default:
+      return 0;
       break;
   }
 
@@ -138,6 +139,11 @@ void get_lock_data(CAN_message_t &frame) {
         //frame.buf[2] = get_lock_target_adjusted_value(0xFE, false);  // gen1 is 0x00, gen4 is 0xFE
         //frame.buf[3] = 0x0A;
         break;
+      case BRAKES2_ID:
+        frame.buf[4] = get_lock_target_adjusted_value(0x7F, false);  // big affect(!) 0x7F is max
+        frame.buf[5] = get_lock_target_adjusted_value(0xFE, false);  // no effect.  Was 0x6E
+        HaldexCAN.write(frame);
+        break;
       case BRAKES3_ID:
         frame.buf[0] = get_lock_target_adjusted_value(0xFE, false);
         frame.buf[1] = 0x0A;
@@ -169,6 +175,11 @@ void get_lock_data(CAN_message_t &frame) {
         frame.buf[1] = get_lock_target_adjusted_value(0x00, false);
         frame.buf[2] = get_lock_target_adjusted_value(0xFE, false);
         frame.buf[3] = 0x0A;
+        break;
+      case BRAKES2_ID:
+        frame.buf[4] = get_lock_target_adjusted_value(0x7F, false);  // big affect(!) 0x7F is max
+        frame.buf[5] = get_lock_target_adjusted_value(0xFE, false);  // no effect.  Was 0x6E
+        HaldexCAN.write(frame);
         break;
       case BRAKES3_ID:
         frame.buf[0] = get_lock_target_adjusted_value(0xFE, false);

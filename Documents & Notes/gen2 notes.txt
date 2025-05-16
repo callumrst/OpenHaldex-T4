@@ -1,0 +1,45 @@
+green - power
+orange & yellow - gnd
+canh - dark green short
+canl - brown
+
+99 through 105
+263? 267 through 272
+400 through 406
+566 through 573
+699 through 706
+~770 breaks comms
+866 through 871
+
+
+0 00
+1 00
+2 00
+3 00
+4 80
+5 22
+6 4b
+7 dd
+
+0 44
+1 b0
+2 00
+3 20
+4 04
+5 d0
+
+0 00
+1 a1
+2 00
+3 28 
+4 00
+5 5d
+
+0 52
+1 41
+2 12
+3 00
+4 01
+5 00
+6 00
+

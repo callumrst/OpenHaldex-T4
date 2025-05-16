@@ -42,8 +42,8 @@ void init_GPIO() {
   pinMode(GPIO_LED_G, OUTPUT);
   pinMode(GPIO_LED_B, OUTPUT);
 
-  pinMode(GPIO_BT_CONF_BUTTON, INPUT_PULLUP);
-  pinMode(GPIO_MODE_PCB, INPUT_PULLUP);
+  pinMode(GPIO_BT_CONF_BUTTON, INPUT);
+  pinMode(GPIO_MODE_PCB, INPUT);
 
   // If the Bluetooth Configuration button is held at startup, flash the Haldex Generation number.
   if (digitalRead(GPIO_BT_CONF_BUTTON)) {
