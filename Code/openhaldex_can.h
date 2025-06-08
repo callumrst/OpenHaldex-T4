@@ -104,7 +104,7 @@
 #endif
 
 // Custom CAN IDs
-#define OPENHALDEX_BROADCAST_ID 0x7B0
+#define OPENHALDEX_BROADCAST_ID 0x7C2
 #define OPENHALDEX_EXTERNAL_CONTROL_ID 0x7C0
 
 #define diagnostics_1_ID 0x764
@@ -238,6 +238,7 @@ void onChassisRX(const CAN_message_t &frame) {
 
     case OPENHALDEX_EXTERNAL_CONTROL_ID:
       // If the requested mode is valid, apply it.
+      DEBUG("Got FIS Cuntroller data");
       if (frame.buf[0] < (uint8_t)openhaldex_mode_t_MAX && frame.buf[0] != (uint8_t)MODE_CUSTOM)  // Is it really a problem to accept MODE_CUSTOM from CAN?
       {
         state.mode = (openhaldex_mode_t)frame.buf[0];
@@ -308,7 +309,7 @@ bool broadcast_openhaldex(void *params) {
   broadcast_frame.len = 8;
   broadcast_frame.buf[0] = APP_MSG_STATUS;
   broadcast_frame.buf[1] = in_standalone_mode;
-  broadcast_frame.buf[2] = received_haldex_engagement;
+  broadcast_frame.buf[2] = (uint8_t)received_haldex_engagement;
   broadcast_frame.buf[3] = (uint8_t)lock_target;
   broadcast_frame.buf[4] = received_vehicle_speed;
   broadcast_frame.buf[5] = state.mode_override;
@@ -417,7 +418,7 @@ void send_standalone_frame_Gen2() {
   frame.buf[7] = 0xFA;                                         // Fahrerwunschmoment req. torque? no effect
   HaldexCAN.write(frame);
 
-  frame.id = MOTOR2_ID;  // needs this
+  frame.id = MOTOR2_ID;  // needs this - just fill with default data
   frame.len = 8;
   frame.buf[0] = 0x00;  // no effect mux code
   frame.buf[1] = 0x30;  // no effect motor temperature
