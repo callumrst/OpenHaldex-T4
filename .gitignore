@@ -1,0 +1,8 @@
+.DS_Store
+*.hex
+*.elf
+*.bin
+*.eep
+build/
+.vscode/.browse.VC.db*
+.vscode/ipch
